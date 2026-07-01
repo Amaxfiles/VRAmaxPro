@@ -1,0 +1,7 @@
+__pycache__/
+vramax_config.txt
+*.pyc
+.DS_Store
+dist/
+build/
+*.spec
