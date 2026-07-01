@@ -1,3 +1,15 @@
+"""
+VRAmax PRO - Headset Performance Software
+=========================================
+A specialized tool for Meta Quest PCVR users to automate registry 
+tweaks and CLI diagnostics for optimal simracing performance.
+
+Author: Amaxfiles
+License: GNU General Public License v3.0 (GPLv3)
+Language: Python 3.x
+"""
+
+
 import os
 import sys
 import subprocess
