@@ -1184,28 +1184,30 @@ class VRAMaxApp(ctk.CTk):
             self.status_label.configure(text=f'{t["err_files_injection"]} {str(e)}', text_color="red")
             return
 
-        # --- INJECTION VARIABLES OPENXR TOOLKIT ---
-        appdata_local = os.environ.get("LOCALAPPDATA") or APPDATA_BASE
-        oxr_dir = os.path.join(appdata_local, "OpenXR-Toolkit")
-        os.makedirs(oxr_dir, exist_ok=True)
-
-        if self.oxr_mode_var.get() == "cas":
-            mode_idx = 1
-        elif self.oxr_mode_var.get() == "fsr":
-            mode_idx = 2
-        else:
-            mode_idx = 3
-
-        oxrtk_config = {
-            "upscaling_mode": mode_idx,
-            "upscaling_sharpness": self.oxr_sharpness_var.get(),
-            "anisotropic_filtering": 0,
-            "foveated_blur": 0,
-        }
+        # --- INJECTION VARIABLES OPENXR TOOLKIT VIA REGISTRE ---
+        # Remplace l'écriture de fichier par l'injection directe dans la base de registre
+        # Le registre est prioritaire sur les fichiers JSON pour OpenXR Toolkit.
+        # OpenXR Toolkit nomme ses clés sans l'extension .exe (ex: OpenComposite_AMS2AVX,
+        # pas OpenComposite_AMS2AVX.exe) : il faut donc retirer l'extension ici,
+        # sinon on écrit dans une clé fantôme jamais lue par le jeu.
+        process_name = os.path.splitext(exe_name)[0]
+        reg_path = rf"Software\OpenXR_Toolkit\OpenComposite_{process_name}"
+        
+        # Mapping: cas=3, fsr=2, nis=1
+        mode_map = {"nis": 1, "fsr": 2, "cas": 3}
+        mode_val = mode_map.get(self.oxr_mode_var.get(), 3)
+        sharpness_val = self.oxr_sharpness_var.get()
 
         try:
-            with open(os.path.join(oxr_dir, f"{exe_name}.json"), "w", encoding="utf-8") as f:
-                json.dump(oxrtk_config, f, indent=4)
+            # Ouverture/Création de la clé registre pour ce jeu
+            reg_key = winreg.CreateKey(winreg.HKEY_CURRENT_USER, reg_path)
+            
+            # Injection des paramètres (valeurs DWORD)
+            winreg.SetValueEx(reg_key, "scaling_type", 0, winreg.REG_DWORD, mode_val)
+            winreg.SetValueEx(reg_key, "sharpness", 0, winreg.REG_DWORD, sharpness_val)
+            winreg.SetValueEx(reg_key, "enabled", 0, winreg.REG_DWORD, 1)
+            
+            winreg.CloseKey(reg_key)
 
             if exe_path:
                 self.status_label.configure(text=t["succ_game"], text_color=COLOR_AMBER)
@@ -1216,7 +1218,7 @@ class VRAMaxApp(ctk.CTk):
                 )
 
         except Exception as e:
-            self.status_label.configure(text=f'{t["err_oxrtk_config"]} {str(e)}', text_color="red")
+            self.status_label.configure(text=f"Registry Error: {str(e)}", text_color="red")
 
     def apply_settings(self):
         t = self.get_translations()
