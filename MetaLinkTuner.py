@@ -9,7 +9,6 @@ License: GNU General Public License v3.0 (GPLv3)
 Language: Python 3.x
 """
 
-
 # VRAmax PRO - Headset Performance Software
 # Copyright (C) 2026 Amax
 #
@@ -75,6 +74,25 @@ def check_oxrtk_installed():
     return os.path.exists(r"C:\Program Files\OpenXR-Toolkit")
 
 
+def check_opencomposite_installed():
+    """Vérifie si OpenComposite App est installé ou configuré."""
+    default_path = r"C:\Program Files\OpenComposite\OpenComposite.exe"
+    if os.path.exists(default_path):
+        return True
+    
+    if os.path.exists(CONFIG_FILE):
+        try:
+            with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+                for line in f:
+                    if line.startswith("opencomposite_exe="):
+                        path = line.strip().split("=", 1)[1]
+                        if os.path.exists(path):
+                            return True
+        except Exception:
+            pass
+    return False
+
+
 def open_url(url):
     """Ouvre une URL de manière fiable sous Windows et en exécutable PyInstaller."""
     try:
@@ -105,14 +123,14 @@ LANGUAGES = {
         "prof_high": "High Profile (RTX 4080 / 4070 / 3080)",
         "prof_mid": "Medium Profile (RTX 4060 / 3070 / 3060)",
         "prof_cust": "Custom Setup",
-        "var_title": "2. Variable Tweaking",
-        "game_title": "3. OpenComposite & OXRTK Settings",
-        "game_btn": "INJECT GAME MODS",
+        "var_title": "2. Variable Tweaking\nin Oculus Debug Tool",
+        "game_title": "3. OpenXR Tool Kit Settings",
+        "game_btn": "INJECT in openXR",
         "lbl_over": "Pixels Per Display Override:",
         "lbl_fov": "FOV Tangent Multiplier - Edge Masking:",
         "lbl_bit": "Constant Video Bitrate - Mbps:",
         "sharpness": "Sharpness:",
-        "status_ready": "VRAmax system ready for optimization.",
+        "status_ready": "Ready.",
         "btn_inject": "INJECT VR CONFIGURATION",
         "btn_odt": "Open Oculus Debug Tool",
         "btn_tuto": "Setup Guide & Prerequisites",
@@ -122,66 +140,49 @@ LANGUAGES = {
         "new_game_exe": "Game exe:",
         "select_game_exe": "Select game exe",
         "game_added": "Game added:",
-        "oxrtk_ok": "[OXRTK: OK]",
+        "oxrtk_ok": "",
         "oxrtk_missing": "[OXRTK: Not detected]",
         "err_cli": "Error: OculusDebugToolCLI.exe path is incorrect!",
         "err_dll": "Error: openvr_api_opencomposite.dll not found!",
         "err_game_folder": "Please select a game folder first.",
         "err_openvr_missing": "Error: openvr_api.dll not found in this game tree!",
-        "err_game_exe_missing": "Warning: game exe not found. LibOVRRT64_1.dll was copied to the selected root folder.",
+        "err_game_exe_missing": "Warning: game exe not found. LibOVRRT64_1.dll was copied to the root folder.",
         "err_files_injection": "Files injection error:",
         "err_oxrtk_config": "OXRTK config error:",
         "err_invalid_bitrate": "Error: invalid bitrate.",
         "err_generic": "Error:",
-        "succ_inject": "Meta hardware alignment successful!",
-        "succ_game": "OpenComposite & OXRTK injected successfully!",
+        "succ_inject": "Variables injected successfully in Oculus Debug Tool!",
+        "succ_game": "Injection OK!",
         "tuto_title": "VRAmax PRO User Guide",
         "tuto_prereq_title": "Prerequisites - only once",
         "tuto_prereq_text": (
             "Before using VRAmax PRO, make sure of two things:\n\n"
-            "1. Launch your game once: start your game, for example Automobilista 2, normally through Steam "
-            "at least once until the main menu, then quit. This allows the game to create its configuration folders.\n\n"
+            "1. Launch your game once: start your game normally through Steam "
+            "at least once until the main menu, then quit.\n\n"
             "2. Install OpenXR Toolkit: VRAmax PRO configures sharpness settings, but the main engine must be installed "
-            "on your PC. Download and install OpenXR Toolkit normally on Windows.\n\n"
-            "If OpenXR Toolkit is not installed, the sharpness part may not be applied correctly."
+            "on your PC."
         ),
-        "tuto_download_oxrtk": "Download OpenXR Toolkit",
         "tuto_step1_title": "Step 1: Headset startup and optimization - Sections 1 & 2",
         "tuto_step1_text": (
-            "This step prepares your Meta Quest headset to receive a high-quality image by removing default limitations.\n\n"
-            "- Right-click VRAmaxPro.exe and choose 'Run as administrator'. This is required to modify registry keys.\n"
-            "- Check that the 'Meta Horizon CLI Location' path is filled correctly.\n"
-            "- In section 1, select your graphics card performance profile: Extreme, High, or Medium.\n"
-            "- The values in section 2 are filled automatically according to the selected profile.\n"
-            "- Click the big blue button at the bottom: INJECT VR CONFIGURATION.\n\n"
-            "Result: the status text turns cyan with 'Meta hardware alignment successful!'. Your headset is now optimized for Meta Link."
+            "- Right-click VRAmaxPro.exe and choose 'Run as administrator'.\n"
+            "- In section 1, select your graphics card performance profile.\n"
+            "- Click INJECT VR CONFIGURATION."
         ),
         "tuto_step2_title": "Step 2: Inject mods into the game - Section 3",
         "tuto_step2_text": (
-            "This step bypasses SteamVR, which uses a lot of resources, and injects OpenComposite directly into the game.\n\n"
-            "- Choose your game in the dropdown list, for example Automobilista 2.\n"
-            "- If your game is not listed, click 'Add game', select the game exe, then validate.\n"
-            "- Click the Folder button if you want to define or change the game root folder.\n"
-            "- Select the main game folder, for example:\n"
-            "  C:\\Program Files (x86)\\Steam\\steamapps\\common\\Automobilista 2\n\n"
-            "- Set sharpness: select 'cas' and adjust the Sharpness slider. Around 70% is recommended.\n"
-            "- Click the orange button: INJECT GAME MODS.\n\n"
-            "Result: VRAmax PRO backs up the original DLL, replaces openvr_api.dll with the OpenComposite version, "
-            "copies LibOVRRT64_1.dll into the game exe folder, then creates the matching OpenXR Toolkit configuration file."
+            "- Choose your game in the dropdown list.\n"
+            "- Set sharpness (CAS recommended around 70%).\n"
+            "- Click INJECT in openXR."
         ),
         "tuto_step3_title": "Step 3: Launch and play",
         "tuto_step3_text": (
-            "- Put your Meta Quest headset on.\n"
-            "- Enable Quest Link with the cable.\n"
-            "- Keep the Meta Horizon PC app open.\n"
-            "- Launch your game from Steam.\n\n"
-            "The game should launch directly in the headset without the heavy SteamVR environment, with a sharper image and better performance."
+            "- Put your Meta Quest headset on and enable Quest Link.\n"
+            "- Launch your game from Steam."
         ),
         "tuto_tip_title": "Developer tip:",
         "tuto_tip_text": (
-            "If a game receives a major Steam update and VR no longer starts correctly, the original DLL may have been restored.\n\n"
-            "In that case, simply reopen VRAmax PRO, select the game, then click INJECT GAME MODS again to instantly reapply the modification.\n\n"
-            "If you add a game manually, make sure the selected exe is the main game exe. That folder is used to place LibOVRRT64_1.dll."
+            "If a game receives a major Steam update and VR no longer starts correctly, the original DLL may have been restored.\n"
+            "Simply click INJECT in openXR again to reapply the modification."
         ),
     },
     "fr": {
@@ -198,14 +199,14 @@ LANGUAGES = {
         "prof_high": "Profil Haut (RTX 4080 / 4070 / 3080)",
         "prof_mid": "Profil Moyen (RTX 4060 / 3070 / 3060)",
         "prof_cust": "Configuration Personnalisée",
-        "var_title": "2. Ajustement des Variables",
-        "game_title": "3. Paramètres OpenComposite & OXRTK",
-        "game_btn": "INJECTER MODS JEU",
+        "var_title": "2. Ajustement des Variables\ndans Oculus Debug Tool",
+        "game_title": "3. Paramètres OpenXR Tool Kit",
+        "game_btn": "INJECTER dans openXR",
         "lbl_over": "Pixels Per Display Override :",
         "lbl_fov": "FOV Tangent Multiplier - Masquage :",
         "lbl_bit": "Débit Vidéo Constant - Mbps :",
         "sharpness": "Netteté :",
-        "status_ready": "Système VRAmax prêt pour l'optimisation.",
+        "status_ready": "Prêt.",
         "btn_inject": "INJECTER LA CONFIGURATION VR",
         "btn_odt": "Ouvrir Oculus Debug Tool",
         "btn_tuto": "Guide d'installation & prérequis",
@@ -215,66 +216,49 @@ LANGUAGES = {
         "new_game_exe": "Exe du jeu :",
         "select_game_exe": "Sélectionner l'exe du jeu",
         "game_added": "Jeu ajouté :",
-        "oxrtk_ok": "[OXRTK : OK]",
+        "oxrtk_ok": "",
         "oxrtk_missing": "[OXRTK : Non détecté]",
         "err_cli": "Erreur : chemin OculusDebugToolCLI.exe incorrect !",
         "err_dll": "Erreur : openvr_api_opencomposite.dll introuvable !",
         "err_game_folder": "Veuillez sélectionner le dossier du jeu.",
         "err_openvr_missing": "Erreur : openvr_api.dll introuvable dans ce dossier de jeu !",
-        "err_game_exe_missing": "Attention : exe du jeu introuvable. LibOVRRT64_1.dll a été copiée dans la racine sélectionnée.",
+        "err_game_exe_missing": "Attention : exe du jeu introuvable. LibOVRRT64_1 a été copiée.",
         "err_files_injection": "Erreur d'injection des fichiers :",
         "err_oxrtk_config": "Erreur de configuration OXRTK :",
         "err_invalid_bitrate": "Erreur : débit vidéo invalide.",
         "err_generic": "Erreur :",
-        "succ_inject": "Alignement matériel Meta réussi !",
-        "succ_game": "OpenComposite & OXRTK injectés avec succès !",
+        "succ_inject": "Injection des variable dans Oculus Debug Tool succés!",
+        "succ_game": "Injection OK !",
         "tuto_title": "Guide d'utilisation VRAmax PRO",
         "tuto_prereq_title": "Prérequis - à faire une seule fois",
         "tuto_prereq_text": (
             "Avant d'utiliser VRAmax PRO, assure-toi de deux petites choses :\n\n"
-            "1. Lancer ton jeu une première fois : démarre ton jeu, par exemple Automobilista 2, normalement via Steam "
-            "au moins une fois jusqu'au menu principal, puis quitte-le. Cela permet au jeu de créer ses dossiers de configuration.\n\n"
+            "1. Lancer ton jeu une première fois : démarre ton jeu normalement via Steam "
+            "au moins une fois jusqu'au menu principal, puis quitte-le.\n\n"
             "2. Installer OpenXR Toolkit : VRAmax PRO configure les réglages de netteté, mais le moteur principal doit être installé "
-            "sur ton PC. Télécharge et installe OpenXR Toolkit normalement sur Windows.\n\n"
-            "Si OpenXR Toolkit n'est pas installé, la partie netteté peut ne pas être appliquée correctement."
+            "sur ton PC."
         ),
-        "tuto_download_oxrtk": "Télécharger OpenXR Toolkit",
         "tuto_step1_title": "Étape 1 : démarrage et optimisation du casque - Sections 1 & 2",
         "tuto_step1_text": (
-            "Cette étape prépare ton casque Meta Quest à recevoir une image de haute qualité en supprimant les limitations par défaut.\n\n"
-            "- Fais un clic droit sur VRAmaxPro.exe et choisis 'Exécuter en tant qu'administrateur'. C'est indispensable pour modifier les clés de registre.\n"
-            "- Vérifie que le chemin 'Emplacement du CLI Meta Horizon' est bien rempli.\n"
-            "- Dans la section 1, sélectionne la puissance de ta carte graphique : Profil Extrême, Profil Haut ou Profil Moyen.\n"
-            "- Les valeurs de la section 2 sont remplies automatiquement selon le profil choisi.\n"
-            "- Clique sur le gros bouton bleu en bas : INJECTER LA CONFIGURATION VR.\n\n"
-            "Résultat : le texte en bas devient cyan avec 'Alignement matériel Meta réussi !'. Ton casque est maintenant optimisé côté Meta Link."
+            "- Fais un clic droit sur VRAmaxPro.exe et choisis 'Exécuter en tant qu'administrateur'.\n"
+            "- Dans la section 1, sélectionne la puissance de ta carte graphique.\n"
+            "- Clique sur INJECTER LA CONFIGURATION VR."
         ),
         "tuto_step2_title": "Étape 2 : injection des mods dans le jeu - Section 3",
         "tuto_step2_text": (
-            "Cette étape permet de contourner SteamVR, qui consomme beaucoup de ressources, et d'injecter OpenComposite directement dans le jeu.\n\n"
-            "- Choisis ton jeu dans la liste déroulante, par exemple Automobilista 2.\n"
-            "- Si ton jeu n'est pas dans la liste, clique sur 'Ajouter un jeu', sélectionne l'exe du jeu, puis valide.\n"
-            "- Clique sur le bouton Dossier si tu veux définir ou changer le dossier racine du jeu.\n"
-            "- Sélectionne le dossier principal du jeu, par exemple :\n"
-            "  C:\\Program Files (x86)\\Steam\\steamapps\\common\\Automobilista 2\n\n"
-            "- Règle la netteté : sélectionne 'cas' et ajuste le curseur Netteté. Une valeur autour de 70% est recommandée.\n"
-            "- Clique sur le bouton orange : INJECTER MODS JEU.\n\n"
-            "Résultat : VRAmax PRO sauvegarde la DLL d'origine, remplace openvr_api.dll par la version OpenComposite, "
-            "copie LibOVRRT64_1.dll dans le dossier de l'exe du jeu, puis crée le fichier de configuration OpenXR Toolkit correspondant."
+            "- Choisis ton jeu dans la liste déroulante.\n"
+            "- Règle la netteté (CAS recommandé autour de 70%).\n"
+            "- Clique sur INJECTER dans openXR."
         ),
         "tuto_step3_title": "Étape 3 : lancer et jouer",
         "tuto_step3_text": (
-            "- Mets ton casque Meta Quest sur la tête.\n"
-            "- Active Quest Link avec le câble.\n"
-            "- Garde l'application Meta Horizon ouverte sur ton PC.\n"
-            "- Lance ton jeu depuis Steam.\n\n"
-            "Le jeu devrait se lancer directement dans le casque sans l'environnement lourd de SteamVR, avec une image plus nette et de meilleures performances."
+            "- Mets ton casque Meta Quest sur la tête et active Quest Link.\n"
+            "- Lance ton jeu depuis Steam."
         ),
         "tuto_tip_title": "Astuce du développeur :",
         "tuto_tip_text": (
-            "Si un jeu reçoit une grosse mise à jour Steam et que la VR ne se lance plus correctement, il est possible que la DLL d'origine ait été restaurée.\n\n"
-            "Dans ce cas, rouvre simplement VRAmax PRO, sélectionne le jeu, puis clique à nouveau sur INJECTER MODS JEU pour réappliquer instantanément la modification.\n\n"
-            "Si tu ajoutes un jeu manuellement, vérifie que l'exe sélectionné est bien l'exe principal du jeu. C'est ce dossier qui sera utilisé pour placer LibOVRRT64_1.dll."
+            "Si un jeu reçoit une grosse mise à jour Steam et que la VR ne se lance plus correctement, il est possible que la DLL d'origine ait été restaurée.\n"
+            "Clique à nouveau sur INJECTER dans openXR pour réappliquer instantanément la modification."
         ),
     },
     "de": {
@@ -283,186 +267,111 @@ LANGUAGES = {
         "browse": "Durchsuchen",
         "folder": "Ordner",
         "loaded": "Geladen",
-        "select_cli": "OculusDebugToolCLI.exe auswählen",
+        "select_cli": "OculusDebugToolCLI auswählen",
         "select_game_folder": "Spielordner auswählen",
         "folder_status": "Ordner",
         "prof_title": "1. Hardware-Leistungsprofile",
-        "prof_ext": "Extrem-Profil (RTX 5080 / 5090 / 4090)",
-        "prof_high": "Hohes Profil (RTX 4080 / 4070 / 3080)",
-        "prof_mid": "Mittleres Profil (RTX 4060 / 3070 / 3060)",
-        "prof_cust": "Benutzerdefinierte Einstellungen",
-        "var_title": "2. Variablen-Anpassung",
-        "game_title": "3. OpenComposite- & OXRTK-Einstellungen",
-        "game_btn": "SPIEL-MODS INJIZIEREN",
+        "prof_ext": "Extrem-Profil (RTX 5080/4090)",
+        "prof_high": "Hohes Profil (RTX 4080/3080)",
+        "prof_mid": "Mittleres Profil (RTX 4060/3060)",
+        "prof_cust": "Benutzerdefiniert",
+        "var_title": "2. Variablen in Oculus\nDebug Tool anpassen",
+        "game_title": "3. OpenXR Tool Kit-Einstellungen",
+        "game_btn": "IN OPENXR INJIZIEREN",
         "lbl_over": "Pixels Per Display Override:",
-        "lbl_fov": "FOV Tangent Multiplier - Randmaskierung:",
+        "lbl_fov": "FOV Tangent Multiplier:",
         "lbl_bit": "Konstante Videobitrate - Mbps:",
         "sharpness": "Schärfe:",
-        "status_ready": "VRAmax-System bereit zur Optimierung.",
+        "status_ready": "Bereit.",
         "btn_inject": "VR-KONFIGURATION INJIZIEREN",
         "btn_odt": "Oculus Debug Tool öffnen",
         "btn_tuto": "Installationsanleitung & Voraussetzungen",
         "btn_paypal": "VRAmax unterstützen",
         "btn_add_game": "Spiel hinzufügen",
         "new_game_name": "Name des Spiels:",
-        "new_game_exe": "Exe-Datei des Spiels:",
-        "select_game_exe": "Exe-Datei des Spiels auswählen",
+        "new_game_exe": "Exe des Spiels:",
+        "select_game_exe": "Exe auswählen",
         "game_added": "Spiel hinzugefügt:",
-        "oxrtk_ok": "[OXRTK: OK]",
-        "oxrtk_missing": "[OXRTK: Nicht erkannt]",
-        "err_cli": "Fehler: Pfad zu OculusDebugToolCLI.exe ist ungültig!",
-        "err_dll": "Fehler: openvr_api_opencomposite.dll nicht gefunden!",
-        "err_game_folder": "Bitte zuerst einen Spielordner auswählen.",
-        "err_openvr_missing": "Fehler: openvr_api.dll wurde in diesem Spielordner nicht gefunden!",
-        "err_game_exe_missing": "Warnung: Spiel-exe nicht gefunden. LibOVRRT64_1.dll wurde in den ausgewählten Stammordner kopiert.",
-        "err_files_injection": "Fehler bei der Datei-Injektion:",
-        "err_oxrtk_config": "OXRTK-Konfigurationsfehler:",
-        "err_invalid_bitrate": "Fehler: ungültige Videobitrate.",
+        "oxrtk_ok": "",
+        "oxrtk_missing": "[OXRTK: Fehlt]",
+        "err_cli": "Fehler: CLI-Pfad falsch!",
+        "err_dll": "Fehler: openvr_api_opencomposite.dll fehlt!",
+        "err_game_folder": "Bitte Spielordner wählen.",
+        "err_openvr_missing": "Fehler: openvr_api.dll fehlt im Ordner!",
+        "err_game_exe_missing": "Warnung: Exe fehlt. LibOVRRT64_1 kopiert.",
+        "err_files_injection": "Fehler bei Datei-Injektion:",
+        "err_oxrtk_config": "OXRTK-Fehler:",
+        "err_invalid_bitrate": "Fehler: Bitrate ungültig.",
         "err_generic": "Fehler:",
-        "succ_inject": "Meta-Hardware-Ausrichtung erfolgreich!",
-        "succ_game": "OpenComposite & OXRTK erfolgreich injiziert!",
-        "tuto_title": "VRAmax PRO Benutzerhandbuch",
-        "tuto_prereq_title": "Voraussetzungen - nur einmal",
-        "tuto_prereq_text": (
-            "Bevor du VRAmax PRO verwendest, stelle zwei Dinge sicher:\n\n"
-            "1. Starte dein Spiel einmal normal über Steam bis zum Hauptmenü und beende es dann. "
-            "Dadurch kann das Spiel seine Konfigurationsordner erstellen.\n\n"
-            "2. Installiere OpenXR Toolkit: VRAmax PRO konfiguriert die Schärfe-Einstellungen, aber die Hauptkomponente muss "
-            "auf deinem PC installiert sein.\n\n"
-            "Wenn OpenXR Toolkit nicht installiert ist, werden die Schärfe-Einstellungen möglicherweise nicht korrekt angewendet."
-        ),
-        "tuto_download_oxrtk": "OpenXR Toolkit herunterladen",
-        "tuto_step1_title": "Schritt 1: Headset-Start und Optimierung - Abschnitte 1 & 2",
-        "tuto_step1_text": (
-            "Dieser Schritt bereitet dein Meta Quest Headset auf ein hochwertiges Bild vor und entfernt Standardbeschränkungen.\n\n"
-            "- Klicke mit der rechten Maustaste auf VRAmaxPro.exe und wähle 'Als Administrator ausführen'. Dies ist notwendig, um Registry-Werte zu ändern.\n"
-            "- Prüfe, ob der Pfad 'Meta Horizon CLI Speicherort' korrekt ausgefüllt ist.\n"
-            "- Wähle in Abschnitt 1 das Leistungsprofil deiner Grafikkarte: Extrem, Hoch oder Mittel.\n"
-            "- Die Werte in Abschnitt 2 werden automatisch passend zum Profil gesetzt.\n"
-            "- Klicke unten auf den großen blauen Button: VR-KONFIGURATION INJIZIEREN.\n\n"
-            "Ergebnis: Der Statustext wird cyan und zeigt 'Meta-Hardware-Ausrichtung erfolgreich!'. Dein Headset ist jetzt für Meta Link optimiert."
-        ),
-        "tuto_step2_title": "Schritt 2: Mods ins Spiel injizieren - Abschnitt 3",
-        "tuto_step2_text": (
-            "Dieser Schritt umgeht SteamVR, das viele Ressourcen verbraucht, und injiziert OpenComposite direkt ins Spiel.\n\n"
-            "- Wähle dein Spiel in der Liste, zum Beispiel Automobilista 2.\n"
-            "- Wenn dein Spiel nicht in der Liste steht, klicke auf 'Spiel hinzufügen', wähle die Spiel-exe und bestätige.\n"
-            "- Klicke auf den Ordner-Button, wenn du den Stammordner des Spiels festlegen oder ändern möchtest.\n"
-            "- Wähle den Hauptordner des Spiels, zum Beispiel:\n"
-            "  C:\\Program Files (x86)\\Steam\\steamapps\\common\\Automobilista 2\n\n"
-            "- Stelle die Schärfe ein: Wähle 'cas' und setze den Schärfe-Regler. Etwa 70% wird empfohlen.\n"
-            "- Klicke auf den orangefarbenen Button: SPIEL-MODS INJIZIEREN.\n\n"
-            "Ergebnis: VRAmax PRO sichert die originale DLL, ersetzt openvr_api.dll durch die OpenComposite-Version, "
-            "kopiert LibOVRRT64_1.dll in den Ordner der Spiel-exe und erstellt die passende OpenXR Toolkit-Konfigurationsdatei."
-        ),
-        "tuto_step3_title": "Schritt 3: Starten und spielen",
-        "tuto_step3_text": (
-            "- Setze dein Meta Quest Headset auf.\n"
-            "- Aktiviere Quest Link per Kabel.\n"
-            "- Lasse die Meta Horizon PC-App geöffnet.\n"
-            "- Starte dein Spiel über Steam.\n\n"
-            "Das Spiel sollte direkt im Headset starten, ohne die schwere SteamVR-Umgebung, mit schärferem Bild und besserer Leistung."
-        ),
-        "tuto_tip_title": "Entwickler-Tipp:",
-        "tuto_tip_text": (
-            "Wenn ein Steam-Update die originale DLL wiederherstellt und VR nicht mehr korrekt startet, öffne einfach VRAmax PRO erneut, "
-            "wähle das Spiel aus und klicke erneut auf SPIEL-MODS INJIZIEREN.\n\n"
-            "Wenn du ein Spiel manuell hinzufügst, achte darauf, dass die ausgewählte exe die Haupt-exe des Spiels ist. "
-            "In diesen Ordner wird LibOVRRT64_1.dll kopiert."
-        ),
+        "succ_inject": "Variablen erfolgreich in Oculus Debug Tool injiziert!",
+        "succ_game": "Injektion OK!",
+        "tuto_title": "Benutzerhandbuch",
+        "tuto_prereq_title": "Voraussetzungen",
+        "tuto_prereq_text": "Bitte OpenXR Toolkit installieren und Spiel einmal starten.",
+        "tuto_step1_title": "Schritt 1: Headset-Optimierung",
+        "tuto_step1_text": "Als Administrator ausführen, Profil wählen, dann Konfiguration injizieren klicken.",
+        "tuto_step2_title": "Schritt 2: Mods injizieren",
+        "tuto_step2_text": "Spiel wählen, Schärfe anpassen, In OpenXR injizieren klicken.",
+        "tuto_step3_title": "Schritt 3: Spielen",
+        "tuto_step3_text": "Headset aufsetzen, Quest Link aktivieren und Spiel starten.",
+        "tuto_tip_title": "Tipp:",
+        "tuto_tip_text": "Nach Steam-Updates Injektion in OpenXR einfach wiederholen.",
     },
     "es": {
-        "title": "VRAmax PRO - Software de rendimiento para visor",
-        "dir_label": "Ubicación del CLI de Meta Horizon:",
+        "title": "VRAmax PRO - Rendimiento del visor",
+        "dir_label": "Ubicación de Meta Horizon CLI:",
         "browse": "Examinar",
         "folder": "Carpeta",
         "loaded": "Cargado",
-        "select_cli": "Seleccionar OculusDebugToolCLI.exe",
-        "select_game_folder": "Seleccionar carpeta del juego",
+        "select_cli": "Seleccionar OculusDebugToolCLI",
+        "select_game_folder": "Seleccionar carpeta",
         "folder_status": "Carpeta",
-        "prof_title": "1. Perfiles de rendimiento de hardware",
-        "prof_ext": "Perfil extremo (RTX 5080 / 5090 / 4090)",
-        "prof_high": "Perfil alto (RTX 4080 / 4070 / 3080)",
-        "prof_mid": "Perfil medio (RTX 4060 / 3070 / 3060)",
-        "prof_cust": "Configuración personalizada",
-        "var_title": "2. Ajuste de variables",
-        "game_title": "3. Ajustes OpenComposite y OXRTK",
-        "game_btn": "INYECTAR MODS DEL JUEGO",
+        "prof_title": "1. Perfiles de hardware",
+        "prof_ext": "Perfil Extremo (RTX 5080/4090)",
+        "prof_high": "Perfil Alto (RTX 4080/3080)",
+        "prof_mid": "Perfil Medio (RTX 4060/3060)",
+        "prof_cust": "Personalizado",
+        "var_title": "2. Ajuste de variables\nen Oculus Debug Tool",
+        "game_title": "3. Ajustes de OpenXR Tool Kit",
+        "game_btn": "INYECTAR EN OPENXR",
         "lbl_over": "Pixels Per Display Override:",
-        "lbl_fov": "FOV Tangent Multiplier - Máscara de bordes:",
-        "lbl_bit": "Bitrate de vídeo constante - Mbps:",
+        "lbl_fov": "FOV Tangent Multiplier:",
+        "lbl_bit": "Bitrate de vídeo - Mbps:",
         "sharpness": "Nitidez:",
-        "status_ready": "Sistema VRAmax listo para la optimización.",
+        "status_ready": "Listo.",
         "btn_inject": "INYECTAR CONFIGURACIÓN VR",
         "btn_odt": "Abrir Oculus Debug Tool",
-        "btn_tuto": "Guía de instalación y requisitos",
+        "btn_tuto": "Guía y requisitos",
         "btn_paypal": "Apoyar VRAmax",
         "btn_add_game": "Añadir juego",
-        "new_game_name": "Nombre del juego:",
+        "new_game_name": "Nombre:",
         "new_game_exe": "Exe del juego:",
-        "select_game_exe": "Seleccionar exe del juego",
-        "game_added": "Juego añadido:",
-        "oxrtk_ok": "[OXRTK: OK]",
+        "select_game_exe": "Seleccionar exe",
+        "game_added": "Añadido:",
+        "oxrtk_ok": "",
         "oxrtk_missing": "[OXRTK: No detectado]",
-        "err_cli": "Error: la ruta de OculusDebugToolCLI.exe no es correcta.",
-        "err_dll": "Error: openvr_api_opencomposite.dll no encontrado.",
-        "err_game_folder": "Selecciona primero una carpeta de juego.",
-        "err_openvr_missing": "Error: openvr_api.dll no se encontró en esta carpeta del juego.",
-        "err_game_exe_missing": "Aviso: exe del juego no encontrado. LibOVRRT64_1.dll se copió en la raíz seleccionada.",
+        "err_cli": "Error: ¡Ruta de CLI incorrecta!",
+        "err_dll": "Error: ¡openvr_api_opencomposite.dll no encontrada!",
+        "err_game_folder": "Selecciona una carpeta primero.",
+        "err_openvr_missing": "Error: ¡openvr_api.dll no encontrada en el juego!",
+        "err_game_exe_missing": "Aviso: Exe no encontrado. LibOVRRT64_1 copiada.",
         "err_files_injection": "Error al inyectar archivos:",
         "err_oxrtk_config": "Error de configuración OXRTK:",
-        "err_invalid_bitrate": "Error: bitrate de vídeo no válido.",
+        "err_invalid_bitrate": "Error: bitrate no válido.",
         "err_generic": "Error:",
-        "succ_inject": "Alineación de hardware Meta realizada correctamente.",
-        "succ_game": "OpenComposite y OXRTK inyectados correctamente.",
-        "tuto_title": "Guía de usuario de VRAmax PRO",
-        "tuto_prereq_title": "Requisitos - solo una vez",
-        "tuto_prereq_text": (
-            "Antes de usar VRAmax PRO, asegúrate de dos cosas:\n\n"
-            "1. Inicia tu juego una vez normalmente desde Steam hasta el menú principal y luego ciérralo. "
-            "Esto permite que el juego cree sus carpetas de configuración.\n\n"
-            "2. Instala OpenXR Toolkit: VRAmax PRO configura los ajustes de nitidez, pero el componente principal debe estar instalado "
-            "en tu PC.\n\n"
-            "Si OpenXR Toolkit no está instalado, la parte de nitidez puede no aplicarse correctamente."
-        ),
-        "tuto_download_oxrtk": "Descargar OpenXR Toolkit",
-        "tuto_step1_title": "Paso 1: Inicio y optimización del visor - Secciones 1 y 2",
-        "tuto_step1_text": (
-            "Este paso prepara tu visor Meta Quest para recibir una imagen de alta calidad eliminando las limitaciones por defecto.\n\n"
-            "- Haz clic derecho en VRAmaxPro.exe y elige 'Ejecutar como administrador'. Es necesario para modificar valores del registro.\n"
-            "- Comprueba que la ruta 'Ubicación del CLI de Meta Horizon' esté rellenada correctamente.\n"
-            "- En la sección 1, selecciona el perfil de rendimiento de tu tarjeta gráfica: Extremo, Alto o Medio.\n"
-            "- Los valores de la sección 2 se rellenan automáticamente según el perfil seleccionado.\n"
-            "- Haz clic en el gran botón azul inferior: INYECTAR CONFIGURACIÓN VR.\n\n"
-            "Resultado: el texto de estado se vuelve cian y muestra 'Alineación de hardware Meta realizada correctamente'. Tu visor ya está optimizado para Meta Link."
-        ),
-        "tuto_step2_title": "Paso 2: Inyectar mods en el juego - Sección 3",
-        "tuto_step2_text": (
-            "Este paso evita SteamVR, que consume muchos recursos, e inyecta OpenComposite directamente en el juego.\n\n"
-            "- Elige tu juego en la lista, por ejemplo Automobilista 2.\n"
-            "- Si tu juego no aparece, pulsa 'Añadir juego', selecciona el exe del juego y confirma.\n"
-            "- Pulsa el botón Carpeta si quieres definir o cambiar la carpeta raíz del juego.\n"
-            "- Selecciona la carpeta principal del juego, por ejemplo:\n"
-            "  C:\\Program Files (x86)\\Steam\\steamapps\\common\\Automobilista 2\n\n"
-            "- Ajusta la nitidez: selecciona 'cas' y ajusta el control deslizante Nitidez. Se recomienda alrededor del 70%.\n"
-            "- Pulsa el botón naranja: INYECTAR MODS DEL JUEGO.\n\n"
-            "Resultado: VRAmax PRO guarda una copia de la DLL original, reemplaza openvr_api.dll por la versión OpenComposite, "
-            "copia LibOVRRT64_1.dll en la carpeta del exe del juego y crea el archivo de configuración correspondiente de OpenXR Toolkit."
-        ),
-        "tuto_step3_title": "Paso 3: Iniciar y jugar",
-        "tuto_step3_text": (
-            "- Ponte el visor Meta Quest.\n"
-            "- Activa Quest Link con el cable.\n"
-            "- Mantén abierta la aplicación Meta Horizon en el PC.\n"
-            "- Inicia el juego desde Steam.\n\n"
-            "El juego debería iniciarse directamente en el visor sin el entorno pesado de SteamVR, con una imagen más nítida y mejor rendimiento."
-        ),
-        "tuto_tip_title": "Consejo del desarrollador:",
-        "tuto_tip_text": (
-            "Si un juego recibe una actualización importante de Steam y la VR deja de iniciar correctamente, es posible que se haya restaurado la DLL original.\n\n"
-            "En ese caso, abre VRAmax PRO de nuevo, selecciona el juego y pulsa otra vez INYECTAR MODS DEL JUEGO para reaplicar la modificación al instante.\n\n"
-            "Si añades un juego manualmente, asegúrate de que el exe seleccionado sea el exe principal del juego. Esa carpeta se usará para colocar LibOVRRT64_1.dll."
-        ),
+        "succ_inject": "¡Variables inyectadas en Oculus Debug Tool correctamente!",
+        "succ_game": "¡Inyección OK!",
+        "tuto_title": "Guía de usuario",
+        "tuto_prereq_title": "Requisitos",
+        "tuto_prereq_text": "Instala OpenXR Toolkit e inicia el juego una vez.",
+        "tuto_step1_title": "Paso 1: Optimización",
+        "tuto_step1_text": "Ejecuta como administrador, elige tu perfil y haz clic en Inyectar Configuración VR.",
+        "tuto_step2_title": "Paso 2: Inyectar mods",
+        "tuto_step2_text": "Elige tu juego, ajusta la nitidez y haz clic en Inyectar en OpenXR.",
+        "tuto_step3_title": "Paso 3: Jugar",
+        "tuto_step3_text": "Ponte el visor, activa Quest Link e inicia el juego.",
+        "tuto_tip_title": "Consejo:",
+        "tuto_tip_text": "Si hay una actualización de Steam, vuelve a hacer clic en Inyectar en OpenXR.",
     },
 }
 
@@ -477,10 +386,16 @@ class VRAMaxApp(ctk.CTk):
         self.geometry("600x1020")
         self.resizable(False, False)
         self.configure(fg_color=COLOR_BG_DARK)
+        
+        try:
+            self.iconbitmap(ressource_path("logo.ico"))
+        except Exception:
+            pass
 
         self.current_lang = "fr"
         self.is_loading_config = False
         self.selected_game_dir = ""
+        self.manual_opencomposite_path = ""
         self.games = json.loads(json.dumps(DEFAULT_GAMES))
         self.oxrtk_installed = check_oxrtk_installed()
         self.cli_path = self.find_oculus_cli()
@@ -535,7 +450,20 @@ class VRAMaxApp(ctk.CTk):
             height=32,
             command=lambda: open_url("https://paypal.me/PCVRAmax"),
         )
-        self.btn_donate.pack(anchor="se")
+        self.btn_donate.pack(anchor="ne", pady=(5, 5))
+
+        self.btn_tuto = ctk.CTkButton(
+            self.right_header,
+            text="",
+            font=ctk.CTkFont(size=12, weight="bold"),
+            fg_color="#2A9D8F",
+            hover_color="#1E6B62",
+            text_color="#FFFFFF",
+            height=32,
+            command=self.open_tutorial_window,
+        )
+        self.btn_tuto.pack(anchor="ne", pady=(0, 5))
+
 
         # --- DIR FRAME ---
         self.dir_frame = ctk.CTkFrame(
@@ -546,13 +474,23 @@ class VRAMaxApp(ctk.CTk):
         )
         self.dir_frame.pack(pady=5, fill="x", padx=30)
 
+        self.dir_title_frame = ctk.CTkFrame(self.dir_frame, fg_color="transparent")
+        self.dir_title_frame.pack(anchor="w", padx=15, pady=(5, 0))
+
         self.dir_title = ctk.CTkLabel(
-            self.dir_frame,
+            self.dir_title_frame,
             text="",
             font=ctk.CTkFont(size=12, weight="bold"),
             text_color=COLOR_CYAN,
         )
-        self.dir_title.pack(anchor="w", padx=15, pady=(5, 0))
+        self.dir_title.pack(side="left")
+        
+        ctk.CTkLabel(
+            self.dir_title_frame,
+            text=" Oculus Debug Tool",
+            font=ctk.CTkFont(size=12),
+            text_color="gray",
+        ).pack(side="left", padx=(5, 0))
 
         self.dir_sub_frame = ctk.CTkFrame(self.dir_frame, fg_color="transparent")
         self.dir_sub_frame.pack(fill="x", padx=15, pady=(2, 8))
@@ -574,6 +512,7 @@ class VRAMaxApp(ctk.CTk):
             command=self.browse_directory,
         )
         self.btn_browse.pack(side="right")
+
 
         # --- SECTION 1: PROFILES ---
         self.profile_frame = ctk.CTkFrame(
@@ -606,7 +545,8 @@ class VRAMaxApp(ctk.CTk):
             rad.pack(anchor="w", padx=25, pady=2)
             setattr(self, f"radio_{val}", rad)
 
-        # --- SECTION 2: VARIABLES ---
+
+        # --- SECTION 2: VARIABLES (ODT) ---
         self.param_frame = ctk.CTkFrame(
             self,
             fg_color=COLOR_FRAME,
@@ -615,13 +555,27 @@ class VRAMaxApp(ctk.CTk):
         )
         self.param_frame.pack(pady=5, fill="x", padx=30)
 
+        self.param_title_frame = ctk.CTkFrame(self.param_frame, fg_color="transparent")
+        self.param_title_frame.pack(pady=5)
+
         self.param_title = ctk.CTkLabel(
-            self.param_frame,
+            self.param_title_frame,
             text="",
             font=ctk.CTkFont(size=13, weight="bold"),
             text_color=COLOR_CYAN,
+            justify="right"
         )
-        self.param_title.pack(pady=5)
+        self.param_title.pack(side="left", padx=(0, 10))
+
+        # Ocululs Icon integration
+        oculus_path = ressource_path("oculus.png")
+        try:
+            if os.path.exists(oculus_path):
+                oc_img = Image.open(oculus_path)
+                self.oculus_logo = ctk.CTkImage(light_image=oc_img, dark_image=oc_img, size=(45, 45))
+                ctk.CTkLabel(self.param_title_frame, text="", image=self.oculus_logo).pack(side="left")
+        except Exception:
+            pass
 
         self.label_override = ctk.CTkLabel(self.param_frame, text="", text_color="#FFFFFF")
         self.label_override.pack(anchor="w", padx=25)
@@ -644,6 +598,37 @@ class VRAMaxApp(ctk.CTk):
         self.entry_bitrate.pack(fill="x", padx=25, pady=2)
         self.entry_bitrate.bind("<KeyRelease>", self.detect_manual_modification)
 
+        self.status_label_odt = ctk.CTkLabel(
+            self.param_frame,
+            text="",
+            text_color=COLOR_AMBER,
+            font=ctk.CTkFont(weight="bold"),
+        )
+        self.status_label_odt.pack(pady=(5, 0))
+
+        self.btn_row_frame = ctk.CTkFrame(self.param_frame, fg_color="transparent")
+        self.btn_row_frame.pack(fill="x", padx=15, pady=(5, 15))
+
+        self.btn_apply = ctk.CTkButton(
+            self.btn_row_frame,
+            text="",
+            fg_color=COLOR_BLUE_TECH,
+            height=40,
+            command=self.apply_settings,
+        )
+        self.btn_apply.pack(side="left", fill="x", expand=True, padx=(0, 5))
+
+        self.btn_odt = ctk.CTkButton(
+            self.btn_row_frame,
+            text="",
+            fg_color="#4E5D6C",
+            width=160,
+            height=40,
+            command=self.open_oculus_debug_tool,
+        )
+        self.btn_odt.pack(side="right")
+
+
         # --- SECTION 3: OPENCOMPOSITE & OXRTK ---
         self.game_frame = ctk.CTkFrame(
             self,
@@ -653,13 +638,26 @@ class VRAMaxApp(ctk.CTk):
         )
         self.game_frame.pack(pady=5, fill="x", padx=30)
 
+        self.game_title_frame = ctk.CTkFrame(self.game_frame, fg_color="transparent")
+        self.game_title_frame.pack(pady=5)
+
         self.game_title = ctk.CTkLabel(
-            self.game_frame,
+            self.game_title_frame,
             text="",
             font=ctk.CTkFont(size=13, weight="bold"),
             text_color=COLOR_AMBER,
         )
-        self.game_title.pack(pady=5)
+        self.game_title.pack(side="left", padx=(0, 10))
+
+        # OpenXR Icon integration
+        openxr_path = ressource_path("openxr.png")
+        try:
+            if os.path.exists(openxr_path):
+                oxr_img = Image.open(openxr_path)
+                self.openxr_logo = ctk.CTkImage(light_image=oxr_img, dark_image=oxr_img, size=(60, 20))
+                ctk.CTkLabel(self.game_title_frame, text="", image=self.openxr_logo).pack(side="left")
+        except Exception:
+            pass
 
         self.game_sub_frame = ctk.CTkFrame(self.game_frame, fg_color="transparent")
         self.game_sub_frame.pack(fill="x", padx=15, pady=(0, 5))
@@ -694,7 +692,7 @@ class VRAMaxApp(ctk.CTk):
         self.btn_add_game.pack(pady=(0, 8))
 
         self.oxr_config_frame = ctk.CTkFrame(self.game_frame, fg_color="transparent")
-        self.oxr_config_frame.pack(fill="x", padx=15, pady=(5, 10))
+        self.oxr_config_frame.pack(fill="x", padx=15, pady=(5, 0))
 
         self.oxr_mode_var = ctk.StringVar(value="cas")
         self.oxr_mode_dropdown = ctk.CTkOptionMenu(
@@ -710,7 +708,7 @@ class VRAMaxApp(ctk.CTk):
         self.lbl_sharpness = ctk.CTkLabel(self.oxr_config_frame, text="", text_color="#FFFFFF")
         self.lbl_sharpness.pack(side="left", padx=(0, 5))
 
-        self.oxr_sharpness_var = ctk.IntVar(value=70)
+        self.oxr_sharpness_var = ctk.IntVar(value=73)
         self.oxr_sharpness_slider = ctk.CTkSlider(
             self.oxr_config_frame,
             variable=self.oxr_sharpness_var,
@@ -735,53 +733,18 @@ class VRAMaxApp(ctk.CTk):
             text="",
             fg_color="#E07A5F",
             hover_color="#C06048",
-            width=100,
+            width=150,
             command=self.inject_game_mods,
         )
         self.btn_inject_game.pack(side="right")
 
-        # --- STATUS & ACTIONS ---
-        self.status_label = ctk.CTkLabel(
-            self,
+        self.status_label_oxr = ctk.CTkLabel(
+            self.game_frame,
             text="",
             text_color=COLOR_AMBER,
             font=ctk.CTkFont(weight="bold"),
         )
-        self.status_label.pack(pady=5)
-
-        self.btn_row_frame = ctk.CTkFrame(self, fg_color="transparent")
-        self.btn_row_frame.pack(fill="x", padx=30, pady=2)
-
-        self.btn_apply = ctk.CTkButton(
-            self.btn_row_frame,
-            text="",
-            fg_color=COLOR_BLUE_TECH,
-            height=40,
-            command=self.apply_settings,
-        )
-        self.btn_apply.pack(side="left", fill="x", expand=True, padx=(0, 5))
-
-        self.btn_odt = ctk.CTkButton(
-            self.btn_row_frame,
-            text="",
-            fg_color="#4E5D6C",
-            width=160,
-            height=40,
-            command=self.open_oculus_debug_tool,
-        )
-        self.btn_odt.pack(side="right")
-
-        self.btn_tuto = ctk.CTkButton(
-            self,
-            text="",
-            font=ctk.CTkFont(size=12, weight="bold"),
-            fg_color="#2A9D8F",
-            hover_color="#1E6B62",
-            text_color="#FFFFFF",
-            height=38,
-            command=self.open_tutorial_window,
-        )
-        self.btn_tuto.pack(pady=(15, 5), fill="x", padx=30)
+        self.status_label_oxr.pack(anchor="e", padx=25, pady=(5, 10))
 
         self.load_user_config()
         self.change_language(self.current_lang, save=False)
@@ -854,7 +817,8 @@ class VRAMaxApp(ctk.CTk):
         self.btn_tuto.configure(text=t["btn_tuto"])
         self.btn_donate.configure(text=t["btn_paypal"])
 
-        self.status_label.configure(text=t["status_ready"], text_color=COLOR_AMBER)
+        self.status_label_odt.configure(text=t["status_ready"], text_color=COLOR_AMBER)
+        self.status_label_oxr.configure(text=t["status_ready"], text_color=COLOR_AMBER)
 
         if save and not self.is_loading_config:
             self.save_user_config()
@@ -880,7 +844,7 @@ class VRAMaxApp(ctk.CTk):
                 self.games[game_selected]["root"] = self.selected_game_dir
 
             self.btn_browse_game.configure(text=t["loaded"])
-            self.status_label.configure(
+            self.status_label_oxr.configure(
                 text=f'{t["folder_status"]}: {os.path.basename(directory)}',
                 text_color=COLOR_CYAN,
             )
@@ -944,6 +908,7 @@ class VRAMaxApp(ctk.CTk):
                 f.write(f"oxr_mode={self.oxr_mode_var.get()}\n")
                 f.write(f"oxr_sharpness={self.oxr_sharpness_var.get()}\n")
                 f.write(f"game_dir={self.selected_game_dir}\n")
+                f.write(f"opencomposite_exe={self.manual_opencomposite_path}\n")
                 f.write(f"default_game_roots={json.dumps(default_game_roots, ensure_ascii=False)}\n")
                 f.write(f"custom_games={json.dumps(custom_games, ensure_ascii=False)}\n")
         except Exception:
@@ -1011,6 +976,9 @@ class VRAMaxApp(ctk.CTk):
                         self.oxr_sharpness_var.set(int(config["oxr_sharpness"]))
                     except ValueError:
                         self.oxr_sharpness_var.set(70)
+
+                if "opencomposite_exe" in config and os.path.exists(config["opencomposite_exe"]):
+                    self.manual_opencomposite_path = config["opencomposite_exe"]
 
                 selected_game = self.game_var.get()
                 selected_root = self.games.get(selected_game, {}).get("root", "")
@@ -1113,7 +1081,7 @@ class VRAMaxApp(ctk.CTk):
             self.game_var.set(name)
             self.selected_game_dir = game_root
             self.btn_browse_game.configure(text=t["loaded"])
-            self.status_label.configure(text=f'{t["game_added"]} {name}', text_color=COLOR_CYAN)
+            self.status_label_oxr.configure(text=f'{t["game_added"]} {name}', text_color=COLOR_CYAN)
             self.save_user_config()
             win.destroy()
 
@@ -1136,7 +1104,7 @@ class VRAMaxApp(ctk.CTk):
         game_root = game_info.get("root", "") or self.selected_game_dir
 
         if not game_root or not os.path.exists(game_root):
-            self.status_label.configure(text=t["err_game_folder"], text_color="red")
+            self.status_label_oxr.configure(text=t["err_game_folder"], text_color="red")
             return
 
         self.selected_game_dir = game_root
@@ -1160,14 +1128,14 @@ class VRAMaxApp(ctk.CTk):
             exe_working_dir = game_root
 
         if not target_dll_path:
-            self.status_label.configure(text=t["err_openvr_missing"], text_color="red")
+            self.status_label_oxr.configure(text=t["err_openvr_missing"], text_color="red")
             return
 
         backup_dll = target_dll_path + ".bak"
         oc_dll_src = ressource_path("openvr_api_opencomposite.dll")
 
         if not os.path.exists(oc_dll_src):
-            self.status_label.configure(text=t["err_dll"], text_color="red")
+            self.status_label_oxr.configure(text=t["err_dll"], text_color="red")
             return
 
         try:
@@ -1181,15 +1149,10 @@ class VRAMaxApp(ctk.CTk):
                 shutil.copyfile(libovr_src, os.path.join(exe_working_dir, "LibOVRRT64_1.dll"))
 
         except Exception as e:
-            self.status_label.configure(text=f'{t["err_files_injection"]} {str(e)}', text_color="red")
+            self.status_label_oxr.configure(text=f'{t["err_files_injection"]} {str(e)}', text_color="red")
             return
 
         # --- INJECTION VARIABLES OPENXR TOOLKIT VIA REGISTRE ---
-        # Remplace l'écriture de fichier par l'injection directe dans la base de registre
-        # Le registre est prioritaire sur les fichiers JSON pour OpenXR Toolkit.
-        # OpenXR Toolkit nomme ses clés sans l'extension .exe (ex: OpenComposite_AMS2AVX,
-        # pas OpenComposite_AMS2AVX.exe) : il faut donc retirer l'extension ici,
-        # sinon on écrit dans une clé fantôme jamais lue par le jeu.
         process_name = os.path.splitext(exe_name)[0]
         reg_path = rf"Software\OpenXR_Toolkit\OpenComposite_{process_name}"
         
@@ -1210,27 +1173,27 @@ class VRAMaxApp(ctk.CTk):
             winreg.CloseKey(reg_key)
 
             if exe_path:
-                self.status_label.configure(text=t["succ_game"], text_color=COLOR_AMBER)
+                self.status_label_oxr.configure(text=t["succ_game"], text_color="#00FF00")
             else:
-                self.status_label.configure(
+                self.status_label_oxr.configure(
                     text=f'{t["succ_game"]} {t["err_game_exe_missing"]}',
-                    text_color=COLOR_AMBER,
+                    text_color="#00FF00",
                 )
 
         except Exception as e:
-            self.status_label.configure(text=f"Registry Error: {str(e)}", text_color="red")
+            self.status_label_oxr.configure(text=f"Registry Error: {str(e)}", text_color="red")
 
     def apply_settings(self):
         t = self.get_translations()
 
         if not os.path.exists(self.entry_dir.get().strip()):
-            self.status_label.configure(text=t["err_cli"], text_color="red")
+            self.status_label_odt.configure(text=t["err_cli"], text_color="red")
             return
 
         try:
             bitrate = int(self.entry_bitrate.get())
         except ValueError:
-            self.status_label.configure(text=t["err_invalid_bitrate"], text_color="red")
+            self.status_label_odt.configure(text=t["err_invalid_bitrate"], text_color="red")
             return
 
         cli_commands = f"service set-pixels-per-display-pixel-override {self.entry_override.get()}\n"
@@ -1260,9 +1223,9 @@ class VRAMaxApp(ctk.CTk):
             winreg.SetValueEx(reg_key, "LinkSharpening", 0, winreg.REG_DWORD, 2)
             winreg.CloseKey(reg_key)
 
-            self.status_label.configure(text=t["succ_inject"], text_color=COLOR_CYAN)
+            self.status_label_odt.configure(text=t["succ_inject"], text_color="#00FF00")
         except Exception as e:
-            self.status_label.configure(text=f'{t["err_generic"]} {str(e)}', text_color="red")
+            self.status_label_odt.configure(text=f'{t["err_generic"]} {str(e)}', text_color="red")
 
     def open_oculus_debug_tool(self):
         odt_path = os.path.join(os.path.dirname(self.entry_dir.get().strip()), "OculusDebugTool.exe")
@@ -1278,8 +1241,7 @@ class VRAMaxApp(ctk.CTk):
 
         self.tuto_win = ctk.CTkToplevel(self)
         self.tuto_win.title(t["tuto_title"])
-        self.tuto_win.geometry("850x750")
-        self.tuto_win.resizable(True, True)
+        self.tuto_win.geometry("950x900")
         self.tuto_win.configure(fg_color=COLOR_BG_DARK)
         self.tuto_win.attributes("-topmost", True)
 
@@ -1291,6 +1253,146 @@ class VRAMaxApp(ctk.CTk):
         )
         scroll_frame.pack(fill="both", expand=True, padx=20, pady=20)
 
+        # --- BLOC DE COMPOSANTS ALIGNÉS AVEC LES IMAGES 1, 2, 3 ---
+        components_frame = ctk.CTkFrame(scroll_frame, fg_color="transparent")
+        components_frame.pack(fill="x", pady=10, padx=10)
+
+        # Chargement et redimensionnement des icônes numérotées (compatibilité PyInstaller)
+        img1_path = ressource_path("1_2.jpg")
+        img2_path = ressource_path("2_2.jpg")
+        img3_path = ressource_path("3_2.jpg")
+        
+        img_size = (35, 35)
+        ctk_img1, ctk_img2, ctk_img3 = None, None, None
+        
+        try:
+            if os.path.exists(img1_path):
+                ctk_img1 = ctk.CTkImage(Image.open(img1_path), size=img_size)
+            if os.path.exists(img2_path):
+                ctk_img2 = ctk.CTkImage(Image.open(img2_path), size=img_size)
+            if os.path.exists(img3_path):
+                ctk_img3 = ctk.CTkImage(Image.open(img3_path), size=img_size)
+        except Exception:
+            pass
+
+        # --- LIGNE 1 : LINK CONFIGURATION ---
+        row1 = ctk.CTkFrame(components_frame, fg_color="transparent")
+        row1.pack(fill="x", pady=8)
+        if ctk_img1:
+            ctk.CTkLabel(row1, text="", image=ctk_img1).pack(side="left", padx=(0, 10))
+        
+        # Statut Link CLI
+        link_installed = os.path.exists(self.entry_dir.get().strip())
+        link_status_txt = "OK" if link_installed else "Non détecté - Renseigner l'emplacement CLI"
+        link_status_color = "green" if link_installed else "red"
+        
+        ctk.CTkLabel(row1, text="Configuration Meta Link :", font=ctk.CTkFont(weight="bold"), text_color="#FFFFFF").pack(side="left", padx=5)
+        ctk.CTkLabel(row1, text=link_status_txt, font=ctk.CTkFont(weight="bold"), text_color=link_status_color).pack(side="left", padx=10)
+
+        # --- LIGNE 2 : OPENXR TOOLKIT ---
+        row2 = ctk.CTkFrame(components_frame, fg_color="transparent")
+        row2.pack(fill="x", pady=8)
+        if ctk_img2:
+            ctk.CTkLabel(row2, text="", image=ctk_img2).pack(side="left", padx=(0, 10))
+        
+        ctk.CTkButton(
+            row2,
+            text="Télécharger OpenXR Toolkit",
+            fg_color="#E07A5F",
+            hover_color="#C06048",
+            command=lambda: open_url("https://github.com/mbucchia/OpenXR-Toolkit"),
+        ).pack(side="left", padx=5)
+
+        def open_oxrtk():
+            path = r"C:\Program Files\OpenXR-Toolkit\companion.exe"
+            if os.path.exists(path):
+                subprocess.Popen([path])
+            elif os.path.exists(r"C:\Program Files\OpenXR-Toolkit"):
+                os.startfile(r"C:\Program Files\OpenXR-Toolkit")
+            else:
+                exe = filedialog.askopenfilename(title="Sélectionner OpenXR Toolkit Companion", filetypes=[("Executable", "*.exe")])
+                if exe:
+                    subprocess.Popen([exe])
+
+        ctk.CTkButton(
+            row2,
+            text="Ouvrir OpenXR Toolkit",
+            fg_color=COLOR_BLUE_TECH,
+            command=open_oxrtk,
+        ).pack(side="left", padx=5)
+
+        # Statut Dynamique OpenXR Toolkit
+        oxr_status_txt = "OK" if self.oxrtk_installed else "Non détecté - Suivre les prérequis d'installation"
+        oxr_status_color = "green" if self.oxrtk_installed else "red"
+        ctk.CTkLabel(row2, text=oxr_status_txt, font=ctk.CTkFont(weight="bold"), text_color=oxr_status_color).pack(side="left", padx=10)
+
+        # --- LIGNE 3 : OPENCOMPOSITE ---
+        row3 = ctk.CTkFrame(components_frame, fg_color="transparent")
+        row3.pack(fill="x", pady=8)
+        if ctk_img3:
+            ctk.CTkLabel(row3, text="", image=ctk_img3).pack(side="left", padx=(0, 10))
+        
+        ctk.CTkButton(
+            row3,
+            text="Télécharger OpenComposite",
+            fg_color="#E07A5F",
+            hover_color="#C06048",
+            command=lambda: open_url("https://znix.xyz/OpenComposite/runtimeswitcher.php?branch=openxr"),
+        ).pack(side="left", padx=5)
+
+        def open_opencomp():
+            # Essai 1: Chemin par défaut de la version globale
+            default_exe = r"C:\Program Files\OpenComposite\OpenComposite.exe"
+            # Essai 2: Utilisation de la sélection manuelle précédente stockée
+            if self.manual_opencomposite_path and os.path.exists(self.manual_opencomposite_path):
+                subprocess.Popen([self.manual_opencomposite_path])
+                return
+            
+            if os.path.exists(default_exe):
+                subprocess.Popen([default_exe])
+            else:
+                # Si l'application ne sait pas où opencomposite se trouve, on propose de chercher l'EXE manuel
+                file_selected = filedialog.askopenfilename(
+                    title="Où se trouve l'exécutable OpenComposite.exe ?", 
+                    filetypes=[("OpenComposite Executable", "*.exe")]
+                )
+                if file_selected:
+                    self.manual_opencomposite_path = os.path.normpath(file_selected)
+                    self.save_user_config()
+                    subprocess.Popen([self.manual_opencomposite_path])
+                    # Forcer le rafraîchissement visuel du label
+                    lbl_oc_status.configure(text="OK", text_color="green")
+
+        ctk.CTkButton(
+            row3,
+            text="Ouvrir OpenComposite",
+            fg_color=COLOR_BLUE_TECH,
+            command=open_opencomp,
+        ).pack(side="left", padx=5)
+
+        # Statut Dynamique OpenComposite
+        oc_installed = check_opencomposite_installed()
+        oc_status_txt = "OK" if oc_installed else "Non détecté - Suivre les prérequis d'installation"
+        oc_status_color = "green" if oc_installed else "red"
+        lbl_oc_status = ctk.CTkLabel(row3, text=oc_status_txt, font=ctk.CTkFont(weight="bold"), text_color=oc_status_color)
+        lbl_oc_status.pack(side="left", padx=10)
+
+
+        # --- 2. IMAGE DES PRÉFÉRENCES ---
+        img_path = ressource_path("reglage preference graphique casque.png")
+        if os.path.exists(img_path):
+            try:
+                pil_img = Image.open(img_path)
+                w, h = pil_img.size
+                ratio = 500 / float(w)
+                new_size = (500, int(float(h) * ratio))
+                img_data = ctk.CTkImage(light_image=pil_img, dark_image=pil_img, size=new_size)
+                ctk.CTkLabel(scroll_frame, text="", image=img_data).pack(pady=(10, 20))
+            except Exception:
+                pass
+
+
+        # --- 3. TEXTE DU TUTORIEL ---
         sections = [
             (t["tuto_prereq_title"], t["tuto_prereq_text"], COLOR_CYAN),
             (t["tuto_step1_title"], t["tuto_step1_text"], COLOR_AMBER),
@@ -1314,14 +1416,6 @@ class VRAMaxApp(ctk.CTk):
                 text_color="#FFFFFF",
                 wraplength=750,
             ).pack(anchor="w", padx=20)
-
-        ctk.CTkButton(
-            scroll_frame,
-            text=t["tuto_download_oxrtk"],
-            fg_color="#E07A5F",
-            hover_color="#C06048",
-            command=lambda: open_url("https://github.com/mbucchia/OpenXR-Toolkit"),
-        ).pack(anchor="w", padx=20, pady=20)
 
 
 if __name__ == "__main__":
